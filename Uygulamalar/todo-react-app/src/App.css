@@ -1,0 +1,18 @@
+.appContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 500px;
+  padding: 30px;
+  border-radius: 10px;
+  background: rgba(250, 250, 250, 0.8);
+}
+
+.taskList_ul {
+  list-style: none;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  overflow: auto;
+  max-height: 500px;
+}

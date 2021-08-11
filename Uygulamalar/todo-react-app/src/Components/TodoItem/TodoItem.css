@@ -1,0 +1,31 @@
+.todo_list_item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  margin-bottom: 20px;
+  background: #ffffff;
+  color: #3a7bd5;
+  font-family: Helvetica;
+  font-weight: 400;
+  border-radius: 3px;
+}
+
+.todo_list_item p {
+  margin: 0;
+}
+
+.todo_list_options {
+  cursor: pointer;
+  width: 25px;
+  height: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+}
+
+.todo_list_options:hover {
+  color: #ffffff;
+  background: #3a7bd58c;
+}
