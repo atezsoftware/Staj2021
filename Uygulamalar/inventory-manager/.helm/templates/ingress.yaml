@@ -1,0 +1,22 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ .Values.app.name }}-ingress-{{ .Values.env }}
+  annotations:
+    konghq.com/strip-path: "false"
+    kubernetes.io/ingress.class: kong
+    configuration.konghq.com: {{ .Values.app.name }}-{{ .Values.env }}
+  namespace: {{ .Values.namespace }}
+spec:
+  tls:
+  - hosts:
+      - {{ .Values.host }}.singlewindow.io
+    secretName: singlewindow-tls
+  rules:
+  - host: {{ .Values.host }}.singlewindow.io
+    http:
+      paths:
+      - path: /api/v1
+        backend:
+          serviceName: {{ .Values.env }}-{{ .Values.app.name }}-svc
+          servicePort: 80

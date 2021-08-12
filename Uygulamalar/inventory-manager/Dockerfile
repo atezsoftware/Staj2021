@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk11
+FROM adoptopenjdk/openjdk11 as build
 
 RUN groupadd -r spring && useradd --no-log-init -m -r -g spring spring
 
@@ -34,7 +34,7 @@ RUN mkdir -p /home/spring/app
 
 WORKDIR /home/spring/app
 
-LABEL tr.com.atez.sign.document="sign-document"
+LABEL tr.com.atez.inventory="inventory"
 
 COPY --chown=spring --from=build /home/spring/app/target/inventory-manager-0.0.1-SNAPSHOT.jar app.jar
 

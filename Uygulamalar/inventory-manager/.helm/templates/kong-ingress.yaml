@@ -1,0 +1,62 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongIngress
+metadata:
+  name: {{ .Values.app.name }}-{{ .Values.env }}
+  annotations:
+    kubernetes.io/ingress.class: kong
+  namespace: {{ .Values.namespace }}
+upstream:
+  slots: 10
+  hash_on: none
+  hash_fallback: none
+  healthchecks:
+    threshold: 25
+    active:
+      concurrency: 10
+      healthy:
+        http_statuses:
+        - 200
+        - 302
+        interval: 0
+        successes: 0
+      http_path: "/"
+      timeout: 1
+      unhealthy:
+        http_failures: 0
+        http_statuses:
+        - 429
+        interval: 0
+        tcp_failures: 0
+        timeouts: 0
+    passive:
+      healthy:
+        http_statuses:
+        - 200
+        successes: 0
+      unhealthy:
+        http_failures: 0
+        http_statuses:
+        - 429
+        - 503
+        tcp_failures: 0
+        timeouts: 0
+proxy:
+  protocol: http
+  path: /
+  connect_timeout: 10000
+  retries: 10
+  read_timeout: 10000
+  write_timeout: 10000
+route:
+  methods:
+  - POST
+  - GET
+  - PUT
+  - DELETE
+  - PATCH
+  regex_priority: 0
+  strip_path: true
+  preserve_host: true
+  protocols:
+  - http
+  - https

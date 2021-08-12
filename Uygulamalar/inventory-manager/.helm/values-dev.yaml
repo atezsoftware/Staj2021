@@ -1,0 +1,26 @@
+env: dev
+namespace: inventory-dev
+host: dev-inventory
+
+image:
+  tag: latest
+  name: localhost:5000/inventory-dev
+
+app:
+  name: inventory
+  port: 8080
+  targetPort: 8080
+  replicas: 1
+  mem_limits: 500Mi
+  cpu_limits: 400m
+  mem_requests: 500Mi
+  cpu_requests: 200m
+
+health_check: /
+
+# Horizontal Pod Autoscaler Configuration
+hpa:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 60
