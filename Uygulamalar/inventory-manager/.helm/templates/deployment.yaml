@@ -56,6 +56,26 @@ spec:
           value: inventory_app
         - name: DB_PASSWORD
           value: password1234@!
+        - name: KEYCLOAK_REALM
+          valueFrom:
+            secretKeyRef:
+              name: dev-inventory-secret
+              key: keycloak_realm
+        - name: KEYCLOAK_AUTH_URL
+          valueFrom:
+            secretKeyRef:
+              name: dev-inventory-secret
+              key: keycloak_auth_url
+        - name: KEYCLOAK_RESOURCE
+          valueFrom:
+            secretKeyRef:
+              name: dev-inventory-secret
+              key: keycloak_resource
+        - name: KEYCLOAK_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: dev-inventory-secret
+              key: keycloak_client_secret
         resources:
           limits:
             cpu: {{ .Values.app.cpu_limits }}
