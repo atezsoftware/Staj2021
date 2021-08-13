@@ -21,7 +21,7 @@ COPY --chown=spring src src
 
 
 
-RUN ./mvnw install -DskipTests --quiet
+RUN ./mvnw install -DskipTests
 
 FROM adoptopenjdk/openjdk11
 
