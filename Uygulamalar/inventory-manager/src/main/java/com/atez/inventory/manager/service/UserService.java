@@ -35,6 +35,11 @@ public class UserService {
 		return userRepository.save(userEntity);
 		
 	}
+
+	public UserEntity findUserById(String userId){
+		Optional<UserEntity> user = userRepository.findByKeyCloakId(userId);
+		return user.get();
+	}
 	
 
 }

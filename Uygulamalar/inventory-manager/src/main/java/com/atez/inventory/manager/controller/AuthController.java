@@ -18,7 +18,7 @@ public class AuthController  implements AuthApi{
 
 	@Override
 	public AuthResponse login(@Valid LoginDTO login) {
-		return keyCloakService.login(login.getUsername(),login.getUsername());
+		return keyCloakService.login(login.getUsername(),login.getPassword());
 	}
 
 }

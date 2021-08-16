@@ -1,9 +1,11 @@
 package com.atez.inventory.manager.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.validation.Valid;
 
+import com.atez.inventory.manager.dto.UserInventoryHistoryDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,5 +41,11 @@ public class UserInventoryController implements UserInventoryApi {
 		}
 		return userInv;
 	}
+
+	@Override
+	public UserInventoryHistoryDTO userInventoryHistory(String id) {
+		return userInventoryService.findUserInventoryHistory(id);
+	}
+
 
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.validation.Valid;
 
+import com.atez.inventory.manager.dto.UserInventoryHistoryDTO;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,5 +28,8 @@ public interface UserInventoryApi {
 	
 	@PatchMapping("{id}")
 	public UserInventoryEntity updateStatus(@PathVariable("id")String id, @RequestBody @Valid String status);
+
+	@GetMapping(value = "/report/{id}")
+	public UserInventoryHistoryDTO userInventoryHistory(@PathVariable("id")String id);
 
 }
