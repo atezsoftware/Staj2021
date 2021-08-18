@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.env }}-{{ .Values.app.name }}-deployment
+  namespace: {{ .Values.namespace }}
+  labels:
+    deployment-name: {{ .Values.env }}-{{ .Values.app.name }}-deployment
+    deployment-env: {{ .Values.env }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app: {{ .Chart.Name }}
+spec:
+  replicas: {{ .Values.app.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: {{ .Values.env }}-{{ .Values.app.name }}
+      env: {{ .Values.env }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.env }}-{{ .Values.app.name }}
+        env: {{ .Values.env }}
+        release: {{ .Release.Name }}
+      annotations:
+    spec:
+      serviceAccountName: {{ .Values.env }}-{{ .Values.app.name }}
+      containers:
+      - name:  {{ .Values.env }}-{{ .Values.app.name }}-container
+        image: {{ .Values.image.name }}:{{ .Values.image.tag }}
+        imagePullPolicy: Always
+        args: ["/bin/bash", "-c", "java -jar app.jar"]
+        # livenessProbe:
+        #   httpGet:
+        #     path: {{ .Values.health_check }}
+        #     port: {{ .Values.app.port }}
+        #   initialDelaySeconds: 30
+        #   timeoutSeconds: 30
+        #   periodSeconds: 30
+        # readinessProbe:
+        #   httpGet:
+        #     path: {{ .Values.health_check }}
+        #     port: {{ .Values.app.port }}
+        #   initialDelaySeconds: 30
+        #   timeoutSeconds: 30
+        #   periodSeconds: 30
+        env:
+        - name: DB_HOST
+          value: jdbc:postgresql://postgresql.inventory-dev.svc.cluster.local:5432/inventory
+        - name: DB_USERNAME
+          value: inventory_app
+        - name: DB_PASSWORD
+          value: password1234@!
+        resources:
+          limits:
+            cpu: {{ .Values.app.cpu_limits }}
+            memory: {{ .Values.app.mem_limits }}
+          requests:
+            cpu: {{ .Values.app.cpu_requests }}
+            memory: {{ .Values.app.mem_requests }}

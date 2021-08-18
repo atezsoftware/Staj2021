@@ -1,0 +1,136 @@
+def label = "inventory-${UUID.randomUUID().toString()}"
+podTemplate(label: label,
+            containers: [
+                    containerTemplate(name: 'docker', image: 'docker', command: 'cat', ttyEnabled: true, alwaysPullImage: true),
+                    containerTemplate(name: 'kubectl', image: 'localhost:5000/k8s-kubectl-helm', command: 'cat', ttyEnabled: true, alwaysPullImage: true),
+                    containerTemplate(name: 'openjdk', image: 'localhost:5000/openjdk', command: 'cat', ttyEnabled: true, alwaysPullImage: true),                    
+            ],
+            volumes: [
+                    hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock'),
+            ])
+{
+    node(label) {
+        properties([disableConcurrentBuilds()])
+        try {
+
+          stage('Checkout') {
+              checkout scm
+          }
+          stage('SonarQube analysis') {
+              if(env.BRANCH_NAME == "master") {
+                  container('openjdk') {
+                    sh """
+                    echo NO SONAR CONFIG
+                    """
+                  }
+              }
+          }
+          stage('Unit Tests') {
+              if(env.BRANCH_NAME == "master") {
+                  container('openjdk') {
+                    sh """
+                    echo NO TEST FOUND
+                    """
+                  }
+              }
+          }
+          stage('Build docker image') {
+              if(env.BRANCH_NAME == "master") {
+
+                  def GIT_COMMIT = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
+
+                  def envMap = [
+                     "master": 'dev',
+                  ]
+
+                  def env_x = envMap[env.BRANCH_NAME]
+                  container('docker') {
+                      def SERVICE_NAME = "inventory-${env_x}"
+                      def DOCKER_IMAGE_REPO = "localhost:5000/inventory-${env_x}"
+
+                          withCredentials([file(credentialsId: 'atez-dev-maven', variable: 'FILE')]) {
+                            
+                            sh('cp $FILE settings.xml')
+
+                            sh """
+                            docker build . -t ${SERVICE_NAME}:${GIT_COMMIT} -f Dockerfile --build-arg SETTINGS_XML=settings.xml --network host
+                            docker tag ${SERVICE_NAME}:${GIT_COMMIT} ${DOCKER_IMAGE_REPO}:${GIT_COMMIT}
+                            docker tag ${SERVICE_NAME}:${GIT_COMMIT} ${DOCKER_IMAGE_REPO}:latest
+
+                            docker push ${DOCKER_IMAGE_REPO}:${GIT_COMMIT}
+                            docker push ${DOCKER_IMAGE_REPO}:latest
+                            """
+                         }
+                  }
+              }
+          }
+          stage('Deploy') {
+              if (env.BRANCH_NAME == "master") {
+
+                  def envMap = [
+                     "master": 'dev',
+                  ]
+
+                  def spaceMap = [
+                     "master": 'dev',
+                  ]
+
+                  def env_x = envMap[env.BRANCH_NAME]
+                  def space_x = spaceMap[env.BRANCH_NAME]
+
+                  def GIT_COMMIT = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
+                  def GIT_COMMIT_MESSAGE = sh(returnStdout: true, script: 'git log -1 --pretty=%B').trim()
+
+                  container('kubectl') {
+
+                        dir('.helm') {
+                          withKubeConfig([credentialsId: 'kubeconfig-atez-k8s',
+                              namespace: "inventory-${space_x}"
+                              ])
+                              {
+                                  sh """
+                                  set +e
+                                  helm upgrade inventory-${env_x} . -f values-${env_x}.yaml --set image.tag=latest --install --wait
+                                  export DEPLOY_RESULT=\$?
+                                  [ \$DEPLOY_RESULT -eq 1 ] && helm rollback inventory-${env_x} 0 && exit 1
+                                  set -e
+                                  """
+                              }
+                        }
+                  }
+              }
+          }
+        }
+        catch (e) {
+          currentBuild.result ="FAILED"
+          throw e
+        }
+        finally {
+          echo currentBuild.result
+          notifyBuild(currentBuild.result)
+        }
+    }
+}
+
+def notifyBuild(String buildStatus = 'STARTED') {
+    // build status of null means successful
+    buildStatus = buildStatus ?: 'SUCCESS'
+    // Default values
+    def colorName = 'RED'
+    def colorCode = '#FF0000'
+    def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
+    def summary = "${subject} (${env.BUILD_URL})"
+    // Override default values based on build status
+    if (buildStatus == 'STARTED') {
+        color = 'YELLOW'
+        colorCode = '#FFFF00'
+    } else if (buildStatus == 'SUCCESS') {
+        color = 'GREEN'
+        colorCode = '#00FF00'
+    } else {
+        color = 'RED'
+        colorCode = '#FF0000'
+    }
+    // Send notifications
+    slackSend(channel: '#ops-inventory', color: colorCode, message: summary)
+}
